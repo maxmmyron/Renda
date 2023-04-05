@@ -20,11 +20,12 @@ Deno.test({
 		// Trigger a save in case this hasn't been done yet.
 		await assetManager.saveAssetSettings();
 
-		const projectSettings = await mockFileSystem.readJson(["ProjectSettings", "assetSettings.json"]);
-		const castProjectSettings = /** @type {import("../../../../../../studio/src/assets/AssetSettingsDiskTypes.js").AssetSettingsDiskData?} */ (projectSettings);
-		assertExists(castProjectSettings);
+		const preferences = await mockFileSystem.readJson([".renda"]).then(json => json || {});
+		const assetSettings = /** @type {import("../../../../../../studio/src/assets/AssetSettingsDiskTypes.js").AssetSettingsDiskData?} */ (preferences.assets);
+		// const castProjectSettings = /** @type {import("../../../../../../studio/src/assets/AssetSettingsDiskTypes.js").AssetSettingsDiskData?} */ (projectSettings);
+		assertExists(assetSettings);
 		// Internally created assets must only be set if the project asset's uuid is marked as persistent.
-		assertEquals(castProjectSettings.internallyCreatedAssets, undefined);
+		assertEquals(assetSettings.internallyCreatedAssets, undefined);
 	},
 });
 

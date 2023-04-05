@@ -81,10 +81,10 @@ await runE2eTest({
 
 		const exists = await page.evaluate(async () => {
 			if (!globalThis.studio) throw new Error("Studio instance does not exist");
-			return await globalThis.studio.projectManager.currentProjectFileSystem?.isFile(["ProjectSettings", "localProjectSettings.json"]);
+			return await globalThis.studio.projectManager.currentProjectFileSystem?.isFile([".renda"]);
 		});
 
-		assert(!exists, "Expected localProjectSettings.json to not exist");
+		assert(!exists, "Expected .renda to not exist");
 	},
 });
 

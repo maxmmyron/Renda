@@ -46,9 +46,11 @@ const StudiorConnectionsManagerMod = await importer.import("../../../../../studi
 /** @type {() => import("../../../../../studio/src/network/studioConnections/StudioConnectionsManager.js").StudioConnectionsManager} */
 const getLastStudioConnectionsManager = StudiorConnectionsManagerMod.getLastStudioConnectionsManager;
 
-const LOCAL_PROJECT_SETTINGS_PATH = ["ProjectSettings", "localProjectSettings.json"];
-const PROJECT_PREFERENCES_PATH = ["ProjectSettings", "preferences.json"];
-const LOCAL_PROJECT_PREFERENCES_PATH = ["ProjectSettings", "preferencesLocal.json"];
+// const LOCAL_PROJECT_SETTINGS_PATH = ["ProjectSettings", "localProjectSettings.json"];
+// const PROJECT_PREFERENCES_PATH = ["ProjectSettings", "preferences.json"];
+// const LOCAL_PROJECT_PREFERENCES_PATH = ["ProjectSettings", "preferencesLocal.json"];
+
+const PREFERENCES_PATH = [".renda"];
 const GITIGNORE_PATH = [".gitignore"];
 
 /**

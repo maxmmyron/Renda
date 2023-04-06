@@ -277,6 +277,7 @@ export class Mesh {
 	 * @param {UnusedAttributeBufferOptions} [opts]
 	 */
 	setVertexData(attributeType, data, opts) {
+		// FIXME: seems like some vec2s come in with undefined options, leading to them taking on componentCount = 3??
 		const buffer = this.getBufferForAttributeType(attributeType, opts);
 		buffer.setVertexData(attributeType, data);
 	}

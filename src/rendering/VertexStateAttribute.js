@@ -1,17 +1,12 @@
 import {Mesh} from "../core/Mesh.js";
 
 /**
-  * @typedef {import("../core/Mesh.js").valueOf<T>} valueOf<T>
-  * @template T
-	*/
-
-/**
  * @typedef VertexStateAttributeOptions
  * @property {number} [componentCount]
- * @property {valueOf<import("../core/Mesh.js").AttributeFormatEnum>} [format]
+ * @property {import("../core/Mesh.js").AllAttributeFormats} [format]
  * @property {boolean} [unsigned]
  * @property {number | null | "auto"} [shaderLocation]
- * @property {valueOf<import("../core/Mesh.js").AttributeTypeEnum>} [attributeType]
+ * @property {import("../core/Mesh.js").AllAttributeTypes} [attributeType]
  */
 
 export class VertexStateAttribute {

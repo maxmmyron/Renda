@@ -36,7 +36,8 @@ export class IconGizmo extends Gizmo {
 	updateMesh() {
 		this.mesh.setVertexCount(this.positions.length);
 		this.mesh.setIndexData(this.indices);
-		this.mesh.setVertexData(Mesh.AttributeType.POSITION, this.positions);
+		// FIXME:
+		this.mesh.setVertexData(Mesh.AttributeType.POSITION, this.positions, {unusedComponentCount: 3});
 		this.mesh.setVertexData(Mesh.AttributeType.COLOR, this.colors);
 	}
 

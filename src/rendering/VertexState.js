@@ -6,12 +6,12 @@ import {VertexStateBuffer} from "./VertexStateBuffer.js";
  */
 
 /**
- * @typedef {(attributeType: import("../core/Mesh.js").AttributeTypeEnum[keyof import("../core/Mesh.js").AttributeTypeEnum]) => number} RequestShaderLocationFn
+ * @typedef {(attributeType: import("../core/Mesh.js").AllAttributeTypes) => number} RequestShaderLocationFn
  */
 
 /**
  * @typedef PreferredShaderLocation
- * @property {import("../core/Mesh.js").AttributeTypeEnum[keyof import("../core/Mesh.js").AttributeTypeEnum]} attributeType
+ * @property {import("../core/Mesh.js").AllAttributeTypes} attributeType
  * @property {number} location
  */
 
@@ -50,7 +50,7 @@ export class VertexState {
 	getDescriptor({
 		preferredShaderLocations = [],
 	} = {}) {
-		/** @type {Map<import("../core/Mesh.js").AttributeTypeEnum[keyof import("../core/Mesh.js").AttributeTypeEnum], number>} */
+		/** @type {Map<import("../core/Mesh.js").AllAttributeTypes, number>} */
 		const preferredShaderLocationsMap = new Map();
 		for (const {attributeType, location} of preferredShaderLocations) {
 			if (preferredShaderLocationsMap.has(attributeType)) {

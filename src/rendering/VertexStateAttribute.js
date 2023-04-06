@@ -1,12 +1,17 @@
 import {Mesh} from "../core/Mesh.js";
 
 /**
+  * @typedef {import("../core/Mesh.js").valueOf<T>} valueOf<T>
+  * @template T
+	*/
+
+/**
  * @typedef VertexStateAttributeOptions
  * @property {number} [componentCount]
- * @property {import("../core/Mesh.js").AttributeFormat | keyof (typeof import("../core/Mesh.js").Mesh)["AttributeFormat"]} [format]
+ * @property {valueOf<import("../core/Mesh.js").AttributeFormatEnum>} [format]
  * @property {boolean} [unsigned]
  * @property {number | null | "auto"} [shaderLocation]
- * @property {import("../core/Mesh.js").AttributeType | keyof (typeof import("../core/Mesh.js").Mesh)["AttributeType"]} [attributeType]
+ * @property {valueOf<import("../core/Mesh.js").AttributeTypeEnum>} [attributeType]
  */
 
 export class VertexStateAttribute {
@@ -18,18 +23,13 @@ export class VertexStateAttribute {
 		format = Mesh.AttributeFormat.FLOAT32,
 		unsigned = false,
 		shaderLocation = null, // use null|-1|"auto" for auto
-		attributeType = 0,
+		attributeType = Mesh.AttributeType.POSITION,
 	} = {}) {
 		this.componentCount = componentCount;
-		if (typeof format == "string") {
-			format = Mesh.AttributeFormat[format];
-		}
+
 		this.format = format;
 		this.unsigned = unsigned;
 		this.shaderLocation = shaderLocation;
-		if (typeof attributeType == "string") {
-			attributeType = Mesh.AttributeType[attributeType];
-		}
 		this.attributeType = attributeType;
 
 		this.offset = 0;

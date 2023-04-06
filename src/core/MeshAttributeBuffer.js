@@ -7,9 +7,9 @@ import {Mesh} from "./Mesh.js";
 /**
  * @typedef MeshAttributeSettings
  * @property {number} offset
- * @property {import("./Mesh.js").AttributeFormat} format
+ * @property {import("./Mesh.js").AllAttributeFormats} format
  * @property {number} componentCount
- * @property {import("./Mesh.js").AttributeType} attributeType
+ * @property {import("./Mesh.js").AllAttributeTypes} attributeType
  */
 
 export class MeshAttributeBuffer {
@@ -72,14 +72,14 @@ export class MeshAttributeBuffer {
 	}
 
 	/**
-	 * @param {import("./Mesh.js").AttributeType} attributeType
+	 * @param {import("./Mesh.js").AllAttributeTypes} attributeType
 	 */
 	hasAttributeType(attributeType) {
 		return !!this.getAttributeSettings(attributeType);
 	}
 
 	/**
-	 * @param {import("./Mesh.js").AttributeType} attributeType
+	 * @param {import("./Mesh.js").AllAttributeTypes} attributeType
 	 * @returns {MeshAttributeSettings?}
 	 */
 	getAttributeSettings(attributeType) {
@@ -141,7 +141,7 @@ export class MeshAttributeBuffer {
 	}
 
 	/**
-	 * @param {import("./Mesh.js").AttributeType} attributeType
+	 * @param {import("./Mesh.js").AllAttributeTypes} attributeType
 	 * @param {ArrayBufferLike | number[] | Vec2[] | Vec3[]} data
 	 */
 	setVertexData(attributeType, data) {
@@ -177,6 +177,9 @@ export class MeshAttributeBuffer {
 				throw new Error("Unknown format");
 		}
 
+		// @ts-ignore
+		console.log(attributeSettings.componentCount, data[0], attributeSettings);
+
 		if (data instanceof ArrayBuffer) {
 			new Uint8Array(this.buffer).set(new Uint8Array(data));
 		} else if (ArrayBuffer.isView(data)) {
@@ -202,6 +205,7 @@ export class MeshAttributeBuffer {
 					setFunction(i * this.arrayStride + attributeSettings.offset + valueByteSize * 1, pos.y, true);
 				}
 			} else if (attributeSettings.componentCount == 3) {
+				// FIXME: seems like IconGizmo is incorrectly sending a componentCount of 3 for a Vec2
 				this._assertVertexDataType(data[0] instanceof Vec3, attributeSettings, "Vec3", data);
 				const castData = /** @type {Vec3[]} */ (data);
 				for (const [i, pos] of castData.entries()) {
@@ -217,7 +221,7 @@ export class MeshAttributeBuffer {
 	}
 
 	/**
-	 * @param {import("./Mesh.js").AttributeType} attributeType
+	 * @param {import("./Mesh.js").AllAttributeTypes} attributeType
 	 */
 	*getVertexData(attributeType) {
 		const attributeSettings = this.getAttributeSettings(attributeType);

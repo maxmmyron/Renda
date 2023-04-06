@@ -78,7 +78,7 @@ async function createMeshFromGltfPrimitive(gltfMesh, gltfJsonData, getBufferFn, 
 	/** @type {import("../../rendering/VertexStateBuffer.js").VertexStateBufferOptions[]} */
 	const vertexStateBuffers = [];
 
-	/** @type {Map<number, ArrayBuffer>} */
+	/** @type {Map<import("../../core/Mesh.js").AllAttributeTypes, ArrayBuffer>} */
 	const meshBuffers = new Map();
 
 	let vertexCount = 0;
@@ -112,6 +112,7 @@ async function createMeshFromGltfPrimitive(gltfMesh, gltfJsonData, getBufferFn, 
 	}
 
 	let indicesBuffer;
+	/** @type {import("../../core/Mesh.js").AllIndexFormats} */
 	let indexFormat = Mesh.IndexFormat.NONE;
 	if (gltfMesh.indices) {
 		const {buffer, format} = await getIndexAccessorData(gltfJsonData, gltfMesh.indices, getBufferFn);
@@ -169,7 +170,9 @@ async function getVertexAccessorData(gltfJsonData, accessorIndex, attributeName,
 		// TODO: According to the spec, we should create an array buffer with all zeros.
 		throw new Error("not yet implemented");
 	} else {
+		/** @type {import("../../core/Mesh.js").AllAttributeTypes} */
 		let attributeType;
+		/** @type {import("../../core/Mesh.js").AllAttributeFormats} */
 		let format;
 		let unsigned;
 		let componentCount;
@@ -282,7 +285,7 @@ async function getIndexAccessorData(gltfJsonData, accessorIndex, getBufferFn) {
 		// TODO: According to the spec, we should create an array buffer with all zeros.
 		throw new Error("not yet implemented");
 	} else {
-		/** @type {import("../../core/Mesh.js").IndexFormat} */
+		/** @type {import("../../core/Mesh.js").AllIndexFormats} */
 		let format = Mesh.IndexFormat.NONE;
 		switch (accessorData.componentType) {
 			case UNSIGNED_SHORT:

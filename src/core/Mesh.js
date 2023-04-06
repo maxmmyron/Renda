@@ -2,14 +2,55 @@ import {DEBUG_INCLUDE_ERROR_MESSAGES, DEBUG_INCLUDE_ERROR_THROWS} from "../studi
 import {neverNoOp} from "../util/neverNoOp.js";
 import {MeshAttributeBuffer} from "./MeshAttributeBuffer.js";
 
-// TODO: make these an enum
-/** @typedef {number} AttributeType */
-/** @typedef {number} AttributeFormat */
-/** @typedef {number} IndexFormat */
+/**
+ * @readonly
+ * @enum {number}
+ */
+const AttributeType = /** @type {const} */ ({
+	POSITION: 0,
+	NORMAL: 1,
+	COLOR: 2,
+	UV1: 3,
+	UV2: 4,
+	TANGENT: 5,
+	BITANGENT: 6,
+});
+
+/**
+ * @readonly
+ * @enum {number}
+ */
+const AttributeFormat = /** @type {const} */({
+	INT8: 0,
+	INT16: 1,
+	INT32: 2,
+	FLOAT16: 3,
+	FLOAT32: 4,
+	NORM8: 5,
+	NORM16: 6,
+});
+
+/**
+ * @readonly
+ * @enum {number}
+ */
+const IndexFormat = /** @type {const} */({
+	NONE: 0,
+	UINT_16: 1,
+	UINT_32: 2,
+});
+
+
+/** @typedef {typeof AttributeType} AttributeTypeEnum */
+/** @typedef {AttributeTypeEnum[keyof AttributeTypeEnum]} AllAttributeTypes */
+/** @typedef {typeof AttributeFormat} AttributeFormatEnum */
+/** @typedef {AttributeFormatEnum[keyof AttributeFormatEnum]} AllAttributeFormats */
+/** @typedef {typeof IndexFormat} IndexFormatEnum */
+/** @typedef {IndexFormatEnum[keyof IndexFormatEnum]} AllIndexFormats */
 
 /**
  * @typedef UnusedAttributeBufferOptions
- * @property {AttributeFormat} [unusedFormat = Mesh.AttributeFormat.FLOAT32]
+ * @property {AllAttributeFormats} [unusedFormat = Mesh.AttributeFormat.FLOAT32]
  * @property {number} [unusedComponentCount = 3]
  */
 
@@ -27,7 +68,9 @@ export class Mesh {
 		/** @type {ArrayBuffer?} */
 		this._currentDataViewIndexBuffer = null;
 		this._dataView = null;
-		this.indexFormat = Mesh.IndexFormat.UINT_16;
+
+		/** @type {AllIndexFormats} */
+		this.indexFormat = IndexFormat.UINT_16;
 		/**
 		 * The total number of incices in the index buffer.
 		 */
@@ -45,42 +88,32 @@ export class Mesh {
 		}
 	}
 
+	/**
+	 * @returns {AttributeTypeEnum}
+	*/
 	static get AttributeType() {
-		return {
-			POSITION: 0,
-			NORMAL: 1,
-			COLOR: 2,
-			UV1: 3,
-			UV2: 4,
-			TANGENT: 5,
-			BITANGENT: 6,
-		};
-	}
-
-	static get IndexFormat() {
-		return {
-			NONE: 0,
-			UINT_16: 1,
-			UINT_32: 2,
-		};
-	}
-
-	static get AttributeFormat() {
-		return {
-			INT8: 0,
-			INT16: 1,
-			INT32: 2,
-			FLOAT16: 3,
-			FLOAT32: 4,
-			NORM8: 5,
-			NORM16: 6,
-		};
+		return AttributeType;
 	}
 
 	/**
-	 * @param {AttributeFormat} format
+	 * @returns {IndexFormatEnum}
+	 */
+	static get IndexFormat() {
+		return IndexFormat;
+	}
+
+	/**
+	 * @returns {AttributeFormatEnum}
+	 */
+	static get AttributeFormat() {
+		return AttributeFormat;
+	}
+
+	/**
+	 * @param {AllAttributeFormats} format
 	 */
 	static getByteLengthForAttributeFormat(format) {
+		typeof format === "string" && (format = Mesh.AttributeFormat[format]);
 		switch (format) {
 			case Mesh.AttributeFormat.INT8:
 				return 1;
@@ -93,7 +126,8 @@ export class Mesh {
 			default:
 				if (DEBUG_INCLUDE_ERROR_THROWS) {
 					if (DEBUG_INCLUDE_ERROR_MESSAGES) {
-						throw new Error("Invalid format");
+						console.log(format, Mesh.AttributeFormat);
+						throw new Error(`Invalid attribute format: ${format}`);
 					} else {
 						throw null;
 					}
@@ -104,39 +138,44 @@ export class Mesh {
 	}
 
 	/**
-	 * @param {AttributeFormat} format
+	 * @param {AttributeFormatEnum[keyof AttributeFormatEnum]} format
 	 */
 	static getBitLengthForAttributeFormat(format) {
 		return Mesh.getByteLengthForAttributeFormat(format) * 8;
 	}
 
+	// TODO: switched to null, ensure tests pass!
 	/**
-	 * @param {AttributeType} typeId
+	 * @param {AttributeFormatEnum[keyof AttributeFormatEnum]} typeId
 	 */
 	static getAttributeNameForType(typeId) {
 		for (const [name, type] of Object.entries(Mesh.AttributeType)) {
 			if (type == typeId) return name;
 		}
-		return typeId;
+		return null;
 	}
 
 	/**
 	 * This changes the index format of the mesh. If an index buffer has already
 	 * been set, it will be converted to the new format.
-	 * @param {IndexFormat} indexFormat
+	 * @param {AllIndexFormats} indexFormat
 	 */
 	setIndexFormat(indexFormat) {
 		if (indexFormat == this.indexFormat) return;
 
 		if (this.indexBuffer.byteLength > 0) {
 			let typedArray;
-			if (this.indexFormat == Mesh.IndexFormat.UINT_32) {
-				typedArray = Uint16Array.from(new Uint32Array(this.indexBuffer));
-			} else if (this.indexFormat == Mesh.IndexFormat.UINT_16) {
-				typedArray = Uint32Array.from(new Uint16Array(this.indexBuffer));
-			} else {
-				throw new Error("Invalid index format.");
+			switch (this.indexFormat) {
+				case Mesh.IndexFormat.UINT_32:
+					typedArray = Uint16Array.from(new Uint32Array(this.indexBuffer));
+					break;
+				case Mesh.IndexFormat.UINT_16:
+					typedArray = Uint32Array.from(new Uint16Array(this.indexBuffer));
+					break;
+				default:
+					throw new Error("Invalid index format.");
 			}
+
 			this.setIndexData(typedArray);
 		} else {
 			this.indexFormat = indexFormat;
@@ -158,13 +197,11 @@ export class Mesh {
 	 * @param {ArrayBufferLike | number[]} data
 	 */
 	setIndexData(data) {
+		if (this.indexFormat == Mesh.IndexFormat.NONE) throw new Error("Invalid index format.");
+
+		// assume data has the correct format
 		if (data instanceof ArrayBuffer) {
-			// data already has the correct format
-			if (this.indexFormat == Mesh.IndexFormat.UINT_16) {
-				this.indexCount = data.byteLength / 2;
-			} else if (this.indexFormat == Mesh.IndexFormat.UINT_32) {
-				this.indexCount = data.byteLength / 4;
-			}
+			this.indexCount = data.byteLength / (2 * this.indexFormat);
 			this.indexBuffer = data;
 		} else if (ArrayBuffer.isView(data)) {
 			let byteCount = 0;
@@ -181,28 +218,22 @@ export class Mesh {
 			this.indexCount = slicedData.byteLength / byteCount;
 			this.indexBuffer = slicedData;
 		} else if (Array.isArray(data)) {
+			if(this.indexFormat !== Mesh.IndexFormat.UINT_16 && this.indexFormat !== Mesh.IndexFormat.UINT_32) throw new Error("Invalid index format.");
+
 			let valueByteSize;
 			let setFunction;
 			this.indexCount = data.length;
 			let bufferLength = 0;
-			if (this.indexFormat == Mesh.IndexFormat.UINT_16) {
-				bufferLength = data.length * 2;
-				valueByteSize = 2;
-			} else if (this.indexFormat == Mesh.IndexFormat.UINT_32) {
-				bufferLength = data.length * 4;
-				valueByteSize = 4;
-			} else {
-				throw new Error("Invalid index format.");
-			}
+
+			bufferLength = data.length * this.indexFormat * 2;
+			valueByteSize = this.indexFormat * 2;
+
 			this.indexBuffer = new ArrayBuffer(bufferLength);
 			const dataView = this.getDataView();
-			if (this.indexFormat == Mesh.IndexFormat.UINT_16) {
-				setFunction = dataView.setUint16.bind(dataView);
-			} else if (this.indexFormat == Mesh.IndexFormat.UINT_32) {
-				setFunction = dataView.setUint32.bind(dataView);
-			} else {
-				throw new Error("Invalid index format.");
-			}
+
+			if (this.indexFormat == Mesh.IndexFormat.UINT_16) setFunction = dataView.setUint16.bind(dataView);
+			else setFunction = dataView.setUint32.bind(dataView);
+
 			for (let i = 0; i < data.length; i++) {
 				setFunction(i * valueByteSize, data[i], true);
 			}
@@ -214,18 +245,15 @@ export class Mesh {
 
 	*getIndexData() {
 		const dataView = this.getDataView();
-
 		let getFunction;
 		let valueByteSize = 4;
-		if (this.indexFormat == Mesh.IndexFormat.UINT_16) {
-			getFunction = dataView.getUint16.bind(dataView);
-			valueByteSize = 2;
-		} else if (this.indexFormat == Mesh.IndexFormat.UINT_32) {
-			getFunction = dataView.getUint32.bind(dataView);
-			valueByteSize = 4;
-		} else {
-			throw new Error("Invalid index format.");
-		}
+
+		if(this.indexFormat == Mesh.IndexFormat.NONE) throw new Error("Invalid index format.");
+		if (this.indexFormat == Mesh.IndexFormat.UINT_16) getFunction = dataView.getUint16.bind(dataView);
+		else getFunction = dataView.getUint32.bind(dataView);
+
+		valueByteSize = this.indexFormat * 2;
+
 		let i = 0;
 		while (i < this.indexBuffer.byteLength) {
 			yield getFunction(i, true);
@@ -244,7 +272,7 @@ export class Mesh {
 	}
 
 	/**
-	 * @param {AttributeType} attributeType
+	 * @param {AllAttributeTypes} attributeType
 	 * @param {ArrayBufferLike | number[] | import("../math/Vec2.js").Vec2[] | import("../math/Vec3.js").Vec3[]} data
 	 * @param {UnusedAttributeBufferOptions} [opts]
 	 */
@@ -287,7 +315,7 @@ export class Mesh {
 	}
 
 	/**
-	 * @param {AttributeType} attributeType
+	 * @param {AllAttributeTypes} attributeType
 	 * @param {UnusedAttributeBufferOptions} options
 	 */
 	getBufferForAttributeType(attributeType, {

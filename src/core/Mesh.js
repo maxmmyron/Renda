@@ -6,7 +6,7 @@ import {MeshAttributeBuffer} from "./MeshAttributeBuffer.js";
  * @readonly
  * @enum {number}
  */
-const AttributeType = /** @type {const} */ ({
+const AttributeType = /** @type {const} */ {
 	POSITION: 0,
 	NORMAL: 1,
 	COLOR: 2,
@@ -14,13 +14,13 @@ const AttributeType = /** @type {const} */ ({
 	UV2: 4,
 	TANGENT: 5,
 	BITANGENT: 6,
-});
+};
 
 /**
  * @readonly
  * @enum {number}
  */
-const AttributeFormat = /** @type {const} */({
+const AttributeFormat = /** @type {const} */{
 	INT8: 0,
 	INT16: 1,
 	INT32: 2,
@@ -28,17 +28,17 @@ const AttributeFormat = /** @type {const} */({
 	FLOAT32: 4,
 	NORM8: 5,
 	NORM16: 6,
-});
+};
 
 /**
  * @readonly
  * @enum {number}
  */
-const IndexFormat = /** @type {const} */({
+const IndexFormat = /** @type {const} */{
 	NONE: 0,
 	UINT_16: 1,
 	UINT_32: 2,
-});
+};
 
 
 /** @typedef {typeof AttributeType} AttributeTypeEnum */

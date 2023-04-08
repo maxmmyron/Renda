@@ -36,8 +36,11 @@
 	stroke-width: 1px;
 }
 
-.contextMenuItem{
+.contextMenuItem {
 	padding: 1px 8px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 }
 .contextMenuItemText {
 	display: inline;

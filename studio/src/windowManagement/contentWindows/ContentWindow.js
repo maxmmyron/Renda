@@ -202,15 +202,19 @@ export class ContentWindow {
 		/**
 		 * @type {import("../../ui/popoverMenus/PopoverToggleButton.js").PopoverToggleButton<PreferencesPopover>}
 		 */
-		const button = new PopoverToggleButton(PreferencesPopover, this.studioInstance.popoverManager, {
+		const button = new PopoverToggleButton(PreferencesPopover, {
+			preferencesManager: this.studioInstance.preferencesManager,
+			preferenceIds,
+			buttonEl: button.el,
+			contentWindowUuid: this.uuid,
+		}, this.studioInstance.popoverManager, {
 			icon: "static/icons/preferences.svg",
 			colorizerFilterManager: this.studioInstance.colorizerFilterManager,
-			onClick: () => {
-				button.togglePopover(popover => {
-					popover.initialize(this.studioInstance.preferencesManager, preferenceIds, button.el, this.uuid);
-				});
-			},
 		});
+
+
+
+
 
 		this.#preferencesButton = button;
 		button.el.classList.add("content-window-preferences-button");

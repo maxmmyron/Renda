@@ -17,11 +17,34 @@ export class PopoverToggleButton extends Button {
 	#popoverManager;
 
 	/**
+	 * @typedef {(popover: T) => void} onPopoverCreatedCallback
+	 * @type {Set<onPopoverCreatedCallback>}
+	 */
+	#onPopoverCreatedCbs = new Set();
+
+	/**
 	 * @param {new (...args: any[]) => T} PopoverConstructor
+	 * @param {import("./PopoverArgs.js").PopoverConstructorArgs<T>} popoverConstructorArgs
 	 * @param {import("./PopoverManager.js").PopoverManager} popoverManager
 	 * @param {import("../Button.js").ButtonGuiOptions} buttonArgs
 	 */
-	constructor(PopoverConstructor, popoverManager, buttonArgs) {
+	constructor(PopoverConstructor, popoverConstructorArgs, popoverManager, buttonArgs) {
+		const {onClick} = buttonArgs;
+
+		buttonArgs.onClick = (ctx) => {
+			if(!this.#popoverConstructorInstance || this.#popoverConstructorInstance.destroyed) {
+				this.#popoverConstructorInstance = /** @type {T} */ (popoverManager.addPopover(PopoverConstructor, popoverConstructorArgs));
+				this.#onPopoverCreatedCbs.forEach(cb => cb(/** @type {T} */ (this.#popoverConstructorInstance)));
+			}
+
+			this.#popoverConstructorInstance?.close();
+			this.#popoverConstructorInstance = null;
+
+			if(onClick) {
+				onClick(ctx);
+			}
+		};
+
 		super(buttonArgs);
 
 		this.#popoverManager = popoverManager;
@@ -33,23 +56,10 @@ export class PopoverToggleButton extends Button {
 	}
 
 	/**
-	 * Toggles the associated popover. Additionally runs callback on popover instantiation, if provided.
 	 *
-	 * @param {((popover: T) => void) | null} successCallback optional callback function to run if the popover is added to the popoverManager.
-	 * @returns {boolean} true if the popover is added to the popoverManager, false if the popover is removed from the popoverManager.
+	 * @param {(popover: T) => any} callback
 	 */
-	togglePopover(successCallback = null) {
-		if (!this.#popoverConstructorInstance || this.#popoverConstructorInstance.destroyed) {
-			this.#popoverConstructorInstance = /** @type {T} */ (this.#popoverManager.addPopover(this.PopoverConstructor));
-			if (successCallback) {
-				successCallback(this.#popoverConstructorInstance);
-			}
-			return true;
-		}
-
-		this.#popoverConstructorInstance.close();
-		this.#popoverConstructorInstance = null;
-
-		return false;
+	onPopoverCreated(callback) {
+		this.#onPopoverCreatedCbs.add(callback);
 	}
 }

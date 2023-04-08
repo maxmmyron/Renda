@@ -1,4 +1,5 @@
 import {waitForEventLoop} from "../../../../src/util/util.js";
+import { PreferencesPopover } from "../../windowManagement/PreferencesPopover.js";
 import {ContextMenu} from "./ContextMenu.js";
 import {Popover} from "./Popover.js";
 
@@ -37,14 +38,29 @@ export class PopoverManager {
 	}
 
 	/**
-	 * Adds a new popover instance to the manager. Returns the instantiated popover which can then be further configured
-	 * using the instantiate() method.
-	 *
 	 * @template {Popover} T
-	 * @param {new (...args: any[]) => T} PopoverConstructor The popover class constructor to add. Defaults to Popover.
+	 *
+	 * @param {(new (popoverArgs: ConstructorParameters<typeof Popover>, args?: import("./PopoverArgs.js").PopoverConstructorArgs<T>) => T)?} PopoverConstructor
+	 * @param {any | boolean} popoverConstructorArgs
+	 * @param {import("./Popover.js").PopoverOptions} options
+	 * @returns {T | Popover}
 	 */
-	addPopover(PopoverConstructor = /** @type  {new (...args: any[]) => T} */ (Popover)) {
-		const popover = new PopoverConstructor(this);
+	addPopover(PopoverConstructor = null, popoverConstructorArgs = false, options = {}) {
+		/**
+		 * @type {T | Popover}
+		 */
+		let popover;
+
+		if (PopoverConstructor === null) {
+			// infer PopoverConstructor as Popover base class
+			popover = new Popover(this);
+		} else {
+			if (popoverConstructorArgs === false) {
+				popover = new PopoverConstructor([this, options]);
+			} else {
+				popover = new PopoverConstructor([this, options], ...popoverConstructorArgs);
+			}
+		}
 
 		popover.onNeedsCurtainChange(this.#updateCurtainActive);
 		this.#activePopovers.push(popover);

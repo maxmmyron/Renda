@@ -56,10 +56,12 @@ export class EntryPointPopover extends Popover {
 	#droppableGui;
 
 	/**
-	 * @param {ConstructorParameters<typeof Popover>} args
+	 *
+	 * @param {ConstructorParameters<typeof Popover>} popoverArgs
+	 * @param {import("../../../ui/popoverMenus/PopoverArgs.js").PopoverConstructorArgs<EntryPointPopover>} entryPointPopoverArgs
 	 */
-	constructor(...args) {
-		super(...args);
+	constructor(popoverArgs, entryPointPopoverArgs) {
+		super(...popoverArgs);
 
 		this.#selectorContainer = document.createElement("div");
 		this.el.appendChild(this.#selectorContainer);
@@ -84,24 +86,17 @@ export class EntryPointPopover extends Popover {
 		});
 
 		addContainer.appendChild(addButton.el);
-	}
 
-	/**
-	 * @param {import("../../../projectSelector/ProjectSettingsManager.js").ProjectSettingsManager} projectSettingsManager
-	 * @param {import("../../../assets/AssetManager.js").AssetManager} assetManager
-	 * @param {import("../../ContentWindowPersistentData.js").ContentWindowPersistentData} persistentData
-	 */
-	initialize = (projectSettingsManager, assetManager, persistentData) => {
 		if (this.#projectSettings) {
 			throw new Error("Error initializing EntryPointPopover: already initialized.");
 		}
 
-		this.#projectSettings = projectSettingsManager;
-		this.#assetManager = assetManager;
-		this.#persistentData = persistentData;
+		this.#projectSettings = entryPointPopoverArgs.projectSettingsManager;
+		this.#assetManager = entryPointPopoverArgs.assetManager;
+		this.#persistentData = entryPointPopoverArgs.persistentData;
 
 		this.#loadPreferences();
-	};
+	}
 
 	async #loadPreferences() {
 		if (!this.#projectSettings || !this.#assetManager || !this.#persistentData) {

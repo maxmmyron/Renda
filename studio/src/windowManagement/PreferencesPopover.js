@@ -2,6 +2,14 @@ import {DropDownGui} from "../ui/DropDownGui.js";
 import {Popover} from "../ui/popoverMenus/Popover.js";
 import {PropertiesTreeView} from "../ui/propertiesTreeView/PropertiesTreeView.js";
 
+/**
+ * @typedef {typeof Popover} args
+ * @param {import("../preferences/PreferencesManager.js").PreferencesManager<any>} preferencesManager
+ * @param {string[]} preferenceIds
+ * @param {HTMLElement} buttonEl
+ * @param {import("../../../src/mod.js").UuidString} contentWindowUuid
+ */
+
 export class PreferencesPopover extends Popover {
 	/** @type {import("../preferences/PreferencesManager.js").PreferencesManager<any>?} */
 	#preferencesManager = null;
@@ -21,10 +29,11 @@ export class PreferencesPopover extends Popover {
 	locationDropDown;
 
 	/**
-	 * @param {ConstructorParameters<typeof Popover>} args
+	 * @param {ConstructorParameters<typeof Popover>} popoverArgs
+	 * @param {import("../ui/popoverMenus/PopoverArgs.js").PopoverConstructorArgs<PreferencesPopover>} preferencesPopoverArgs
 	 */
-	constructor(...args) {
-		super(...args);
+	constructor(popoverArgs, preferencesPopoverArgs) {
+		super(...popoverArgs);
 
 		const topBarEl = document.createElement("div");
 		topBarEl.classList.add("preferences-popover-top-bar");
@@ -49,24 +58,20 @@ export class PreferencesPopover extends Popover {
 
 		this.preferencesTreeView = new PropertiesTreeView();
 		this.el.appendChild(this.preferencesTreeView.el);
-	}
 
-	/**
-	 * @override
-	 * @param {import("../preferences/PreferencesManager.js").PreferencesManager<any>} preferencesManager
-	 * @param {string[]} preferenceIds
-	 * @param {HTMLElement} buttonEl
-	 * @param {import("../../../src/mod.js").UuidString} contentWindowUuid
-	 */
-	initialize = (preferencesManager, preferenceIds, buttonEl, contentWindowUuid) => {
 		if (this.#preferencesManager) {
 			throw new Error("Already initialized");
 		}
-		this.#preferencesManager = preferencesManager;
-		this.#contentWindowUuid = contentWindowUuid;
 
-		for (const id of preferenceIds) {
-			const {uiName, type} = preferencesManager.getPreferenceConfig(id);
+		this.#preferencesManager = preferencesPopoverArgs.preferencesManager;
+		this.#contentWindowUuid = preferencesPopoverArgs.contentWindowUuid;
+
+		if(!this.#preferencesManager) {
+			throw new Error("PreferencesManager is required");
+		}
+
+		for (const id of preferencesPopoverArgs.preferenceIds) {
+			const {uiName, type} = this.#preferencesManager.getPreferenceConfig(id);
 			if (type == "unknown") {
 				throw new Error("Preferences with unknown type can not be added to PreferencesPopovers.");
 			}
@@ -78,9 +83,14 @@ export class PreferencesPopover extends Popover {
 			});
 			entry.onValueChange(() => {
 				if (this.#isLoadingValues) return;
-				preferencesManager.set(id, entry.getValue(), {
+
+				if (!this.#preferencesManager || !this.#contentWindowUuid) {
+					throw new Error("Assertion failed, popover has not been initialized");
+				}
+
+				this.#preferencesManager.set(id, entry.getValue(), {
 					location: this.#getCurrentLocation(),
-					contentWindowUuid,
+					contentWindowUuid: this.#contentWindowUuid,
 				});
 			});
 			this.#createdEntries.set(id, {
@@ -91,7 +101,7 @@ export class PreferencesPopover extends Popover {
 
 		this.#updateEntryValues();
 
-		this.setPos(buttonEl);
+		this.setPos(preferencesPopoverArgs.buttonEl);
 	}
 
 	#getCurrentLocation() {

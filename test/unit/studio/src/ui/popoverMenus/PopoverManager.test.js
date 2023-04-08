@@ -54,8 +54,14 @@ Deno.test({
 
 			// Creating popover with custom class
 			class ExtendedPopOver extends Popover {
-
+				/**
+				 * @param {ConstructorParameters<typeof Popover>} popoverArgs
+				 */
+				constructor(popoverArgs) {
+					super(...popoverArgs);
+				}
 			}
+
 			const popover3 = manager.addPopover(ExtendedPopOver);
 			assertInstanceOf(popover3, ExtendedPopOver);
 

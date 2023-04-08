@@ -24,11 +24,10 @@ import {Popover} from "./Popover.js";
  * @property {((event: ContextMenuItemClickEvent) => any)?} [onClick = null] The function to call when the item is clicked.
  * @property {(() => void)?} [onHover=null] The function to call when the item is hovered over.
  * @property {boolean} [disabled=false] Whether the item should start disabled.
- * @property {boolean} [showRightArrow=false] Whether to arrow on the right of the text should be shown.
- * @property {boolean} [reserveIconSpace=false] If true, all items in the submenu will move to the right in case this item gets a checkmark or bullet.
- * @property {boolean} [showCheckmark=false] Whether to show a checkmark in front of to the item.
- * @property {boolean} [showBullet=false] Whether to show a bullet in front of to the item.
- * @property {string?} [icon=null] The icon to show in front of the item.
+ * @property {boolean} [showsRightArrow=false] Whether the item should show an arrow on the right.
+ * @property {boolean} [reserveIconSpace=false] Whether all items in the submenu should be padded to ensure text alignment.
+ * @property {"checkmark"|"bullet"?} [icon=null] Icon to show in the item. If null, no icon is shown.
+ * @property {string?} [iconSrc=null] The icon src to show in the item. Overrides defaultIcon.
  * @property {boolean} [horizontalLine=false] When true, renders a line instead of the text.
  * @property {ContextMenuStructure | (function(): Promise<ContextMenuStructure>) | function(): ContextMenuStructure} [submenu=null] The submenu structure to show on hover.
  */

@@ -65,7 +65,7 @@
 	color: var(--selected-text-color);
 }
 
-.contextMenuRightArrow{
+.rightArrow{
 	width: 0px;
 	height: 0px;
 	display: inline-block;
@@ -74,7 +74,7 @@
 	border-right: 0px solid transparent;
 	margin-left: 6px;
 }
-.contextMenuItem:hover:not(.disabled) .contextMenuRightArrow{
+.contextMenuItem:hover:not(.disabled) .rightArrow{
 	border-left: 10px solid var(--selected-text-color);
 }
 

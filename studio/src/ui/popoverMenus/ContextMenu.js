@@ -7,6 +7,7 @@ import {Popover} from "./Popover.js";
  * @typedef {object} ContextMenuOptions
  * @property {ContextMenu?} [parentMenu = null]
  * @property {ContextMenuStructure?} [structure = null]
+ * @property {boolean} [hasReservedIconSpace=false] Whether all items in the submenu should be padded to ensure text alignment.
  */
 
 /** @typedef {Array<ContextMenuItemOpts>} ContextMenuStructure */
@@ -24,12 +25,11 @@ import {Popover} from "./Popover.js";
  * @property {((event: ContextMenuItemClickEvent) => any)?} [onClick = null] The function to call when the item is clicked.
  * @property {(() => void)?} [onHover=null] The function to call when the item is hovered over.
  * @property {boolean} [disabled=false] Whether the item should start disabled.
- * @property {boolean} [showsRightArrow=false] Whether the item should show an arrow on the right.
- * @property {boolean} [reserveIconSpace=false] Whether all items in the submenu should be padded to ensure text alignment.
- * @property {"checkmark"|"bullet"?} [icon=null] Icon to show in the item. If null, no icon is shown.
+ * @property {boolean} [hasRightArrow=false] Whether the item should show an arrow on the right.
+ * @property {"checkmark"|"bullet"|null} [icon=null] A default icon to show on the left size of the button. If null, no icon is shown (overridden by iconSrc)
  * @property {string?} [iconSrc=null] The icon src to show in the item. Overrides defaultIcon.
- * @property {boolean} [horizontalLine=false] When true, renders a line instead of the text.
- * @property {ContextMenuStructure | (function(): Promise<ContextMenuStructure>) | function(): ContextMenuStructure} [submenu=null] The submenu structure to show on hover.
+ * @property {boolean} [isDivider=false] Whether the item should be a horizontal line.
+ * @property {ContextMenuStructure | (function(): Promise<ContextMenuStructure>) | (function(): ContextMenuStructure) | null} [submenu=null] The submenu structure to show on hover.
  */
 
 export class ContextMenu extends Popover {
@@ -40,6 +40,7 @@ export class ContextMenu extends Popover {
 	constructor(manager, {
 		parentMenu = null,
 		structure = null,
+		hasReservedIconSpace = false,
 	} = {}) {
 		super(manager, {showArrow: false});
 		this.parentMenu = parentMenu;
@@ -52,7 +53,7 @@ export class ContextMenu extends Popover {
 		/** @type {import("./Popover.js").PopoverSetPosItem?} */
 		this.lastSetPosItem = null;
 
-		this.hasResevedIconSpaceItem = false;
+		this.hasReservedIconSpace = hasReservedIconSpace;
 
 		if (structure) {
 			this.createStructure(structure);
@@ -173,7 +174,7 @@ export class ContextMenu extends Popover {
 		const item = new ContextMenuItem(this, opts);
 		this.addedItems.push(item);
 		this.el.appendChild(item.el);
-		this.updateHasReservedIconSpaceItem();
+		// this.updateHasReservedIconSpaceItem();
 		return item;
 	}
 
@@ -208,10 +209,10 @@ export class ContextMenu extends Popover {
 		}
 	}
 
-	updateHasReservedIconSpaceItem() {
-		this.hasResevedIconSpaceItem = this.addedItems.some(item => item.reserveIconSpace);
-		for (const item of this.addedItems) {
-			item.updateIconStyle();
-		}
-	}
+	// updateHasReservedIcon() {
+	// 	this.hasReservedIconSpace = this.addedItems.some(item => item.reserveIconSpace);
+	// 	for (const item of this.addedItems) {
+	// 		item.updateIconStyle();
+	// 	}
+	// }
 }

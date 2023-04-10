@@ -1,4 +1,19 @@
 export class ContextMenuItem {
+	#shouldReserveIconSpace = false;
+
+	/**
+	 * The icon source as set in the constructor.
+	 *
+	 * @type {string | null}
+	 */
+	#icon = null;
+
+	/** @type {Set<function(import("./ContextMenu.js").ContextMenuItemClickEvent) : void>} */
+	onClickCbs = new Set();
+
+	/** @type {Set<() => void>} */
+	onHoverCbs = new Set();
+
 	/**
 	 * @param {import("./ContextMenu.js").ContextMenu} containingContextMenu
 	 * @param {import("./ContextMenu.js").ContextMenuItemOpts} opts
@@ -9,45 +24,45 @@ export class ContextMenuItem {
 		onClick = null,
 		onHover = null,
 		disabled = false,
-		showRightArrow = false,
-		horizontalLine = false,
-		reserveIconSpace = false,
-		showCheckmark = false,
-		showBullet = false,
+		hasRightArrow = false,
 		icon = null,
+		iconSrc = null,
+		isDivider = false,
+		submenu = null,
 	} = {}) {
 		this.containingContextMenu = containingContextMenu;
-		this.el = document.createElement("div");
-		this.el.classList.add("contextMenuItem");
-		this.el.classList.toggle("disabled", disabled || horizontalLine);
 
-		this.iconEl = document.createElement("div");
-		this.iconEl.classList.add("contextMenuItemIcon");
-		this.textEl = document.createElement("div");
-		this.textEl.title = tooltip;
-		this.textEl.classList.add("contextMenuItemText");
-		if (!horizontalLine) {
-			this.el.appendChild(this.iconEl);
-			this.el.appendChild(this.textEl);
+		if(isDivider) {
+			this.el = document.createElement("hr");
+			this.el.classList.add("contextMenuItemHorizontalLine");
+
+			// Wo break out of the constructor here because we don't want to add extraneous elements to what would otherwise
+			// be a purely thematic break in the menu content.
+			return;
 		} else {
-			const lineEl = document.createElement("div");
-			lineEl.classList.add("contextMenuItemHorizontalLine");
-			this.el.appendChild(lineEl);
+			this.el = document.createElement("button");
+			this.el.classList.add("contextMenuItem");
+
+			this.el.disabled = disabled;
+			this.el.classList.toggle("disabled", disabled);
 		}
 
-		this._reserveIconSpace = reserveIconSpace;
-		this._showCheckmark = showCheckmark;
-		this._showBullet = showBullet;
-		this._icon = icon;
+		this.iconEl = document.createElement("picture");
+		this.iconEl.classList.add("contextMenuItemIcon");
+
+		this.textEl = document.createElement("span");
+		this.textEl.title = tooltip;
+		this.textEl.classList.add("contextMenuItemText");
+
+		this.el.appendChild(this.iconEl);
+		this.el.appendChild(this.textEl);
+
+		this.#icon = this.#resolveIcon(icon, iconSrc);
+
 		this.disabled = disabled;
 		this.updateIconStyle();
 
-		/** @type {Set<function(import("./ContextMenu.js").ContextMenuItemClickEvent) : void>} */
-		this.onClickCbs = new Set();
 		if (onClick) this.onClick(onClick);
-
-		/** @type {Set<() => void>} */
-		this.onHoverCbs = new Set();
 		if (onHover) this.onHover(onHover);
 
 		this.el.addEventListener("click", () => {
@@ -74,67 +89,63 @@ export class ContextMenuItem {
 			}
 		});
 
-		if (showRightArrow) {
+		if (hasRightArrow) {
 			const arrowEl = document.createElement("div");
-			arrowEl.classList.add("contextMenuRightArrow");
+			arrowEl.classList.add("rightArrow");
 			this.el.appendChild(arrowEl);
 		}
 
 		this.setText(text);
 	}
 
-	get reserveIconSpace() {
-		return this._reserveIconSpace;
-	}
+	/**
+	 * @param {"checkmark" | "bullet" | null} icon
+	 * @param {string | null} iconSrc
+	 */
+	#resolveIcon(icon, iconSrc) {
+		if (iconSrc) {
+			return iconSrc;
+		}
 
-	set reserveIconSpace(value) {
-		this._reserveIconSpace = value;
-		this.containingContextMenu.updateHasReservedIconSpaceItem();
-	}
-
-	get showCheckmark() {
-		return this._showCheckmark;
-	}
-
-	set showCheckmark(value) {
-		this._showCheckmark = value;
-		this.updateIconStyle();
-	}
-
-	get showBullet() {
-		return this._showBullet;
-	}
-
-	set showBullet(value) {
-		this._showBullet = value;
-		this.updateIconStyle();
+		switch(icon) {
+			case "checkmark":
+				return "static/icons/contextMenuCheck.svg";
+			case "bullet":
+				return "static/icons/contextMenuBullet.svg";
+			default:
+				return null;
+		}
 	}
 
 	get icon() {
-		return this._icon;
+		return this.#icon;
 	}
 
-	set icon(value) {
-		this._icon = value;
+	/**
+	 * @param {"checkmark" | "bullet" | null} value
+	 */
+	setIcon(value) {
+		this.#icon = this.#resolveIcon(value, null);
 		this.updateIconStyle();
 	}
 
+	/**
+	 * @param {string | null} iconSrc
+	 */
+	setIconBySrc(iconSrc) {
+		this.#icon = iconSrc;
+	}
+
 	updateIconStyle() {
-		const needsSpace = this.containingContextMenu.hasResevedIconSpaceItem || this.showCheckmark || this.showBullet || this.icon;
+		const needsSpace = this.containingContextMenu.hasReservedIconSpace || this.#icon;
+
+		if(!this.iconEl) {
+			throw new Error("Icon element is not defined. This is likely because the ContextMenuItem is a divider.");
+		}
+
 		this.iconEl.classList.toggle("hidden", !needsSpace);
-		let iconUrl = null;
-		if (this.showCheckmark) {
-			iconUrl = "static/icons/contextMenuCheck.svg";
-		} else if (this.showBullet) {
-			iconUrl = "static/icons/contextMenuBullet.svg";
-		} else if (this.icon) {
-			iconUrl = this.icon;
-		}
-		if (iconUrl) {
-			this.iconEl.style.backgroundImage = `url(${iconUrl})`;
-		} else {
-			this.iconEl.style.backgroundImage = "";
-		}
+		let iconURL = null;
+		this.iconEl.style.backgroundImage = iconURL ? `url(${iconURL})` : "";
 	}
 
 	destructor() {
@@ -145,6 +156,9 @@ export class ContextMenuItem {
 	 * @param {string} text
 	 */
 	setText(text) {
+		if(!this.textEl) {
+			throw new Error("Text element is not defined. This is likely because the ContextMenuItem is a divider.");
+		}
 		this.textEl.textContent = text;
 	}
 

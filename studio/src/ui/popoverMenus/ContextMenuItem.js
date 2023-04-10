@@ -42,9 +42,20 @@ export class ContextMenuItem {
 		} else {
 			this.el = document.createElement("button");
 			this.el.classList.add("contextMenuItem");
-
 			this.el.disabled = disabled;
+
+			// TODO: we can remove this class and instead style based on the disabled attribute.
 			this.el.classList.toggle("disabled", disabled);
+
+			/**
+			 * this.contentEL represents a container element that holds the primary icon and text content of a menu item.
+			 * This is used to prevent justify-content: space-between from pushing the text content to the right side of the
+			 * menu
+			 */
+			this.contentEl = document.createElement("div");
+			this.contentEl.classList.add("contextMenuItemContent");
+
+			this.el.appendChild(this.contentEl);
 		}
 
 		this.iconEl = document.createElement("picture");
@@ -54,8 +65,8 @@ export class ContextMenuItem {
 		this.textEl.title = tooltip;
 		this.textEl.classList.add("contextMenuItemText");
 
-		this.el.appendChild(this.iconEl);
-		this.el.appendChild(this.textEl);
+		this.contentEl.appendChild(this.iconEl);
+		this.contentEl.appendChild(this.textEl);
 
 		this.#icon = this.#resolveIcon(icon, iconSrc);
 
@@ -132,7 +143,7 @@ export class ContextMenuItem {
 	/**
 	 * @param {string | null} iconSrc
 	 */
-	setIconBySrc(iconSrc) {
+	setIconSrc(iconSrc) {
 		this.#icon = iconSrc;
 	}
 

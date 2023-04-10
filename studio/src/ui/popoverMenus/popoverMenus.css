@@ -11,7 +11,7 @@
 	z-index: var(--z-context-menu);
 	border-radius: var(--default-border-radius);
 	background: var(--bg-color-level0);
-	padding: 3px 0px;
+	/* padding: 0.25rem; */
 	white-space: nowrap;
 	border: 1px solid var(--overlay-panel-borders-color);
 	box-shadow: var(--overlay-panel-box-shadow);
@@ -41,6 +41,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	width:100%;
 }
 .contextMenuItemText {
 	display: inline;

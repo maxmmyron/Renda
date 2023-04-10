@@ -12,7 +12,7 @@ export class ContextMenuSubmenuItem extends ContextMenuItem {
 	constructor(containingContextMenu, opts) {
 		opts = {
 			...opts,
-			showRightArrow: true,
+			hasRightArrow: true,
 		};
 		super(containingContextMenu, opts);
 

@@ -326,7 +326,10 @@ export class TabsStudioWindow extends StudioWindow {
 		e.preventDefault();
 
 		/** @type {import("../ui/popoverMenus/ContextMenu.js").ContextMenuStructure} */
-		const addTabSubmenu = [];
+		const addTabSubmenu = {
+			items: [],
+		};
+
 		for (const [id, contentWindow] of this.windowManager.registeredContentWindows) {
 			let text = "<ContentWindow>";
 			let icon = null;
@@ -336,8 +339,10 @@ export class TabsStudioWindow extends StudioWindow {
 			} else if (contentWindow.contentWindowTypeId) {
 				text = "<" + contentWindow.contentWindowTypeId + ">";
 			}
-			addTabSubmenu.push({
-				text, icon,
+
+			addTabSubmenu.items.push({
+				text,
+				iconSrc: icon,
 				onClick: () => {
 					this.addTabType(id, true);
 				},
@@ -345,117 +350,125 @@ export class TabsStudioWindow extends StudioWindow {
 		}
 
 		/** @type {import("../ui/popoverMenus/ContextMenu.js").ContextMenuStructure} */
-		const contextMenuStructure = [
-			{
-				text: "Close Tab",
-				disabled: this.tabs.length <= 1 && this.isRoot,
-				onClick: () => {
-					const index = this.tabsSelectorGroup.buttons.indexOf(button);
-					this.closeTab(index);
-					if (this.tabs.length == 0) {
-						this.unsplitParent();
-					}
-				},
-			},
-			{
-				text: "Add Tab",
-				submenu: addTabSubmenu,
-			},
-			{
-				text: "Workspaces",
-				submenu: async () => {
-					/** @type {import("../ui/popoverMenus/ContextMenu.js").ContextMenuStructure} */
-					const workspacesSubmenu = [];
+		const contextMenuStructure = {
+			items: [],
+			hasReservedIconSpace: true,
+		}
 
-					const currentWorkspace = await this.windowManager.workspaceManager.getCurrentWorkspaceId();
+		contextMenuStructure.items.push({
+			text: "Close Tab",
+			disabled: this.tabs.length <= 1 && this.isRoot,
+			onClick: () => {
+				const index = this.tabsSelectorGroup.buttons.indexOf(button);
+				this.closeTab(index);
+				if (this.tabs.length == 0) {
+					this.unsplitParent();
+				}
+			}
+		});
 
-					const workspaces = await this.windowManager.workspaceManager.getWorkspacesList();
-					for (const workspaceId of workspaces) {
-						const isCurrentWorkspace = workspaceId == currentWorkspace;
-						workspacesSubmenu.push({
-							text: workspaceId,
-							reserveIconSpace: true,
-							showBullet: isCurrentWorkspace,
-							submenu: async () => {
-								/** @type {import("../ui/popoverMenus/ContextMenu.js").ContextMenuStructure} */
-								const submenu = [];
-								if (!isCurrentWorkspace) {
-									submenu.push({
-										text: "Activate",
-										onClick: () => {
-											this.windowManager.workspaceManager.setCurrentWorkspaceId(workspaceId);
-										},
-									});
-								}
-								if (isCurrentWorkspace) {
-									let autoSaveValue = await this.windowManager.workspaceManager.getCurrentWorkspaceAutoSaveValue();
-									submenu.push(
-										{
-											text: "Save",
-											onClick: () => {
-												this.windowManager.saveWorkspace();
-											},
-										},
-										{
-											text: "Autosave",
-											reserveIconSpace: true,
-											showCheckmark: autoSaveValue,
-											onClick: e => {
-												e.preventMenuClose();
-												autoSaveValue = !autoSaveValue;
-												e.item.showCheckmark = autoSaveValue;
-												this.windowManager.workspaceManager.setCurrentWorkspaceAutoSaveValue(autoSaveValue);
-											},
-										}
-									);
-								}
-								submenu.push(
-									{
-										text: "Clone",
-										onClick: () => {
-											this.windowManager.workspaceManager.cloneWorkspace(workspaceId);
-										},
+		contextMenuStructure.items.push({
+			text: "Add Tab",
+			submenu: addTabSubmenu,
+		});
+
+		contextMenuStructure.items.push({
+			text: "Workspaces",
+			submenu: async () => {
+				/** @type {import("../ui/popoverMenus/ContextMenu.js").ContextMenuStructure} */
+				const workspacesSubmenu = {
+					items: [],
+					hasReservedIconSpace: true,
+				}
+
+				const currentWorkspace = await this.windowManager.workspaceManager.getCurrentWorkspaceId();
+
+				const workspaces = await this.windowManager.workspaceManager.getWorkspacesList();
+				for (const workspaceId of workspaces) {
+					const isCurrentWorkspace = workspaceId == currentWorkspace;
+					workspacesSubmenu.items.push({
+						text: workspaceId,
+						icon: isCurrentWorkspace ? "bullet" : null,
+						submenu: async () => {
+							/** @type {import("../ui/popoverMenus/ContextMenu.js").ContextMenuStructure} */
+							const submenu = {
+								items: [],
+								hasReservedIconSpace: true,
+							};
+
+							if (!isCurrentWorkspace) {
+								submenu.items.push({
+									text: "Activate",
+									onClick: () => {
+										this.windowManager.workspaceManager.setCurrentWorkspaceId(workspaceId);
 									},
-									{
-										text: "Delete",
-										disabled: workspaces.length <= 1,
-										onClick: () => {
-											this.windowManager.workspaceManager.deleteWorkspace(workspaceId);
-										},
-									}
-								);
-								if (isCurrentWorkspace) {
-									submenu.push({
-										text: "Revert to Saved State",
-										onClick: () => {
-											this.windowManager.workspaceManager.revertCurrentWorkspace();
-										},
-									});
-								}
-								return submenu;
-							},
-						});
-					}
+								});
+								let autoSaveValue = await this.windowManager.workspaceManager.getCurrentWorkspaceAutoSaveValue();
+								submenu.items.push({
+									text: "Save",
+									onClick: () => {
+										this.windowManager.saveWorkspace();
+									},
+								});
 
-					workspacesSubmenu.push(
-						{
-							horizontalLine: true,
+								submenu.items.push({
+									text: "Autosave",
+									icon: autoSaveValue ? "checkmark" : null,
+									onClick: e => {
+										e.preventMenuClose();
+										autoSaveValue = !autoSaveValue;
+										e.item.setIcon(autoSaveValue ? "checkmark" : null);
+										this.windowManager.workspaceManager.setCurrentWorkspaceAutoSaveValue(autoSaveValue);
+									},
+								});
+							}
+
+							submenu.items.push({
+								text: "Clone",
+								onClick: () => {
+									this.windowManager.workspaceManager.cloneWorkspace(workspaceId);
+								},
+							});
+
+							submenu.items.push({
+								text: "Delete",
+								disabled: workspaces.length <= 1,
+								onClick: () => {
+									this.windowManager.workspaceManager.deleteWorkspace(workspaceId);
+								},
+							});
+
+							if (isCurrentWorkspace) {
+								submenu.items.push({
+									text: "Revert to Saved State",
+									onClick: () => {
+										this.windowManager.workspaceManager.revertCurrentWorkspace();
+									},
+								});
+							}
+							return submenu;
 						},
-						{
-							text: "Add New Workspace",
-							onClick: () => {
-								const name = prompt("Enter Workspace Name", "New Workspace");
-								if (name && !workspaces.includes(name)) {
-									this.windowManager.workspaceManager.addNewWorkspace(name);
-								}
-							},
-						}
-					);
+					});
+				}
 
-					return workspacesSubmenu;
-				},
+				workspacesSubmenu.items.push(
+					{
+						isDivider: true,
+					},
+					{
+						text: "Add New Workspace",
+						onClick: () => {
+							const name = prompt("Enter Workspace Name", "New Workspace");
+							if (name && !workspaces.includes(name)) {
+								this.windowManager.workspaceManager.addNewWorkspace(name);
+							}
+						},
+					}
+				);
+
+				return workspacesSubmenu;
 			},
-		];
+		});
 
 		const menu = getStudioInstance().popoverManager.createContextMenu(contextMenuStructure);
 		menu.setPos(e);

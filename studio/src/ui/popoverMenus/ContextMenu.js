@@ -7,10 +7,13 @@ import {Popover} from "./Popover.js";
  * @typedef {object} ContextMenuOptions
  * @property {ContextMenu?} [parentMenu = null]
  * @property {ContextMenuStructure?} [structure = null]
- * @property {boolean} [hasReservedIconSpace=false] Whether all items in the submenu should be padded to ensure text alignment.
  */
 
-/** @typedef {Array<ContextMenuItemOpts>} ContextMenuStructure */
+/**
+ * @typedef {object} ContextMenuStructure
+ * @property {boolean} [hasReservedIconSpace] Whether the menu should reserve space for icons on the left side of the menu.
+ * @property {Required<Array<ContextMenuItemOpts>>} items The items to show in the menu.
+ */
 
 /**
  * @typedef {object} ContextMenuItemClickEvent
@@ -39,8 +42,7 @@ export class ContextMenu extends Popover {
 	 */
 	constructor(manager, {
 		parentMenu = null,
-		structure = null,
-		hasReservedIconSpace = false,
+		structure = null
 	} = {}) {
 		super(manager, {showArrow: false});
 		this.parentMenu = parentMenu;
@@ -53,7 +55,7 @@ export class ContextMenu extends Popover {
 		/** @type {import("./Popover.js").PopoverSetPosItem?} */
 		this.lastSetPosItem = null;
 
-		this.hasReservedIconSpace = hasReservedIconSpace;
+		this.hasReservedIconSpace = structure?.hasReservedIconSpace ?? false;
 
 		if (structure) {
 			this.createStructure(structure);
@@ -141,14 +143,16 @@ export class ContextMenu extends Popover {
 	 * @param {ContextMenuStructure} structure
 	 */
 	createStructure(structure) {
-		for (const itemSettings of structure) {
+		if(!structure.items) {
+			throw new Error("No items in structure");
+		}
+
+		for (const itemSettings of structure.items) {
 			let createdItem = null;
 			if (itemSettings.submenu) {
 				createdItem = this.addSubMenu(itemSettings);
 				createdItem.onCreateSubmenu(submenu => {
-					if (itemSettings.submenu instanceof Array) {
-						submenu.createStructure(itemSettings.submenu);
-					} else if (itemSettings.submenu instanceof Function) {
+					if (itemSettings.submenu instanceof Function) {
 						const result = itemSettings.submenu();
 						if (result instanceof Promise) {
 							result.then(submenuStructure => {
@@ -156,6 +160,10 @@ export class ContextMenu extends Popover {
 							});
 						} else {
 							submenu.createStructure(result);
+						}
+					} else {
+						if (itemSettings.submenu) {
+							submenu.createStructure(itemSettings.submenu);
 						}
 					}
 				});
